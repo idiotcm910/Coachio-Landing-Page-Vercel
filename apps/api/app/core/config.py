@@ -5,6 +5,9 @@ from typing import List
 class Settings(BaseSettings):
     # Database
     DATABASE_URL: str
+    # Neon non-pooling URL used by Alembic migrations; runtime engine uses DATABASE_URL (pooled).
+    # On Vercel both are auto-injected by the Neon integration.
+    DATABASE_URL_UNPOOLED: str = ""
 
     # Security
     SECRET_KEY: str

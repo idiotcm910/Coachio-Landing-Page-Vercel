@@ -25,7 +25,7 @@ one admin app. FastAPI + Next.js, MIT licensed.
 
 - **API:** Python 3.12, FastAPI, SQLAlchemy, Alembic, Resend. Vercel Blob storage, in-process cache (no Redis).
 - **Web:** Next.js 14, Tailwind v3, `@coachio/api-client`, `@coachio/design-system`.
-- **Infra:** Vercel (serverless) / Supabase / Vercel Blob. Postgres 16, Docker Compose (local). Monorepo: nx + pnpm.
+- **Infra:** Vercel (serverless) / Neon Postgres / Vercel Blob. Postgres 16, Docker Compose (local). Monorepo: nx + pnpm.
 
 ## Prerequisites
 
@@ -98,7 +98,7 @@ receipt email → lucky-draw → broadcast → discount).
 
 ## Deploy with Vercel
 
-One-click style deploy (FE + FastAPI serverless + Supabase + Vercel Blob).
+One-click style deploy (FE + FastAPI serverless + Neon Postgres + Vercel Blob).
 Hướng dẫn từng bước (tiếng Việt): [`docs/deploy-vercel.vi.md`](./docs/deploy-vercel.vi.md).
 
 > The badge link above points to `https://github.com/idiotcm910/Coachio-Landing-Page-Vercel` — update `repository-url` after forking/publishing your own repo.

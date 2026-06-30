@@ -5,8 +5,8 @@ from sqlalchemy.pool import NullPool
 from app.core.config import settings
 
 # Serverless (Vercel): each invocation is a fresh process — never hold a pool.
-# NullPool opens/closes a connection per checkout; Supabase's pgbouncer pooler
-# (port 6543) handles the actual connection multiplexing.
+# NullPool opens/closes a connection per checkout; Neon's transaction pooler
+# (DATABASE_URL) handles the actual connection multiplexing.
 engine = create_engine(settings.DATABASE_URL, poolclass=NullPool, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

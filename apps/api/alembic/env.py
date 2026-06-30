@@ -17,8 +17,9 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
-# Override sqlalchemy.url from env var DATABASE_URL at runtime
-_db_url = os.getenv("DATABASE_URL")
+# Neon transaction-pooler can't run all DDL → use DATABASE_URL_UNPOOLED for Alembic;
+# runtime app still uses the pooled DATABASE_URL.
+_db_url = os.getenv("DATABASE_URL_UNPOOLED") or os.getenv("DATABASE_URL")
 if _db_url:
     config.set_main_option("sqlalchemy.url", _db_url)
 

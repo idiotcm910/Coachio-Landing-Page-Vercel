@@ -109,6 +109,7 @@ Nền tảng funnel & landing page mã nguồn mở: xây dựng landing page, t
 - **Email**: [Resend](https://resend.com/) SDK
 - **Storage**: Vercel Blob (khi deploy Vercel); boto3 S3-compatible hoặc Bunny CDN (khi self-host)
 - **Tracking**: Meta Conversions API
+- **Database**: Neon Postgres (khi deploy Vercel — auto-inject 2 URL: pooled + non-pooling)
 - **Background jobs**: Vercel Cron 1x/ngày (broadcast dispatch); lazy expiry cho đơn hàng
 
 ### Frontend — `apps/web`
@@ -595,7 +596,7 @@ Bao gồm 2 path:
 
 Xem hướng dẫn đầy đủ từng bước tại **[docs/deploy-vercel.vi.md](./docs/deploy-vercel.vi.md)**.
 
-Tóm tắt: fork repo → tạo Supabase project → import vào Vercel → set env vars → Deploy → chạy `alembic upgrade head` → seed admin.
+Tóm tắt: fork repo → import vào Vercel → tạo Neon database trong tab Storage → set env vars còn lại → Deploy → chạy `alembic upgrade head` (dùng `DATABASE_URL_UNPOOLED`) → seed admin.
 
 ### Docker build (tự host)
 
