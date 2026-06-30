@@ -1,6 +1,6 @@
 # Coachio Landing Page
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/sonlovinbot/coachio-landing-page-vercel)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/idiotcm910/Coachio-Landing-Page-Vercel)
 
 > 🇻🇳 Tài liệu tiếng Việt: [README.vi.md](./README.vi.md)
 > This repo is a Vercel-optimised edition of [coachio-landing-page](https://github.com/sonlovinbot/coachio-landing-page).
@@ -101,7 +101,7 @@ receipt email → lucky-draw → broadcast → discount).
 One-click style deploy (FE + FastAPI serverless + Supabase + Vercel Blob).
 Hướng dẫn từng bước (tiếng Việt): [`docs/deploy-vercel.vi.md`](./docs/deploy-vercel.vi.md).
 
-> The badge link above points to `https://github.com/sonlovinbot/coachio-landing-page-vercel` — update `repository-url` after forking/publishing your own repo.
+> The badge link above points to `https://github.com/idiotcm910/Coachio-Landing-Page-Vercel` — update `repository-url` after forking/publishing your own repo.
 
 ## License
 
