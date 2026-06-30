@@ -85,9 +85,6 @@ class Settings(BaseSettings):
     META_DEFAULT_CAPI_TOKEN: str = ""
     META_DEFAULT_TEST_EVENT_CODE: str = ""
 
-    # Funnel pending-order expiry job
-    FUNNEL_ORDER_EXPIRY_JOB_INTERVAL_SECONDS: int = 300  # Seconds between expiry job runs
-
     # Broadcast email campaign worker
     BROADCAST_BATCH_SIZE: int = 100           # jobs claimed+sent per tick (Resend batch cap)
     BROADCAST_RATE_DELAY_MS: int = 200        # throttle sleep between batches (milliseconds)

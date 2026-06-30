@@ -11,7 +11,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.v1.router import api_router
 from app.middleware.cdn_url_rewrite import CDNUrlRewriteMiddleware
-from app.jobs.expire_pending_funnel_orders import start_expiry_job
 from app.jobs.broadcast_dispatch_job import start_broadcast_job
 
 
@@ -56,12 +55,11 @@ async def _app_resources():
     _active_backend = get_backend()
     logger.info("Cache backend: in-memory (%s)", type(_active_backend).__name__)
 
-    expiry_task = asyncio.create_task(start_expiry_job())
     broadcast_task = asyncio.create_task(start_broadcast_job())
     try:
         yield
     finally:
-        for task in (expiry_task, broadcast_task):
+        for task in (broadcast_task,):
             task.cancel()
             try:
                 await task

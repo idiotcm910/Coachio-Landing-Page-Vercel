@@ -312,8 +312,34 @@ class FunnelOrderService:
         return {"status": "success", "order_code": order_code, "funnel_id": order.funnel_id}
 
     @staticmethod
+    def _maybe_expire_pending(db: Session, order: FunnelOrder) -> None:
+        """Lazy expiry (serverless — no background job). Flip a PENDING order past the
+        SePay window (created_at + ORDER_EXPIRY_MINUTES) to EXPIRED on read. The guarded
+        UPDATE is idempotent: once EXPIRED/SUCCESS it matches 0 rows.
+        """
+        if order.status != "PENDING":
+            return
+        created = order.created_at
+        if created is None:
+            return
+        if created.tzinfo is None:  # SQLite returns naive datetimes
+            created = created.replace(tzinfo=timezone.utc)
+        cutoff = datetime.now(timezone.utc) - timedelta(minutes=ORDER_EXPIRY_MINUTES)
+        if created > cutoff:
+            return
+        updated = (
+            db.query(FunnelOrder)
+            .filter(FunnelOrder.id == order.id, FunnelOrder.status == "PENDING")
+            .update({FunnelOrder.status: "EXPIRED"}, synchronize_session=False)
+        )
+        if updated:
+            db.commit()
+            db.refresh(order)
+
+    @staticmethod
     def order_status(db: Session, order: FunnelOrder) -> FunnelOrderStatusResponse:
-        """Task 4.6 — public polling endpoint; success payload only on SUCCESS."""
+        """Public polling endpoint; lazy-expire stale PENDING first, then success payload on SUCCESS."""
+        FunnelOrderService._maybe_expire_pending(db, order)
         extra: dict = {}
         if order.status == "SUCCESS":
             funnel = db.query(Funnel).filter(Funnel.id == order.funnel_id).first()
