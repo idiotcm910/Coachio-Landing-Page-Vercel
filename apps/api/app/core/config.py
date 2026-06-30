@@ -1,13 +1,38 @@
+import os
+from pydantic import model_validator
 from pydantic_settings import BaseSettings
 from typing import List
 
 
+def _normalize_pg_scheme(url: str) -> str:
+    """Replace leading 'postgres://' with 'postgresql://' — SQLAlchemy requires the latter."""
+    if url.startswith("postgres://"):
+        return "postgresql://" + url[len("postgres://"):]
+    return url
+
+
 class Settings(BaseSettings):
     # Database
-    DATABASE_URL: str
+    # Optional here — if blank, the model_validator below reads Vercel-Neon env vars
+    # (POSTGRES_URL / POSTGRES_URL_NON_POOLING) as automatic fallbacks.
+    DATABASE_URL: str = ""
     # Neon non-pooling URL used by Alembic migrations; runtime engine uses DATABASE_URL (pooled).
-    # On Vercel both are auto-injected by the Neon integration.
+    # On Vercel both are auto-injected by the Neon integration as POSTGRES_URL_NON_POOLING.
     DATABASE_URL_UNPOOLED: str = ""
+
+    @model_validator(mode="after")
+    def _resolve_and_normalize_db_urls(self) -> "Settings":
+        """
+        Fallback to Vercel-Neon env vars when the canonical DATABASE_URL vars are absent,
+        then normalize 'postgres://' → 'postgresql://' for SQLAlchemy compatibility.
+        """
+        if not self.DATABASE_URL:
+            self.DATABASE_URL = os.getenv("POSTGRES_URL", "")
+        if not self.DATABASE_URL_UNPOOLED:
+            self.DATABASE_URL_UNPOOLED = os.getenv("POSTGRES_URL_NON_POOLING", "")
+        self.DATABASE_URL = _normalize_pg_scheme(self.DATABASE_URL)
+        self.DATABASE_URL_UNPOOLED = _normalize_pg_scheme(self.DATABASE_URL_UNPOOLED)
+        return self
 
     # Security
     SECRET_KEY: str

@@ -17,9 +17,19 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
-# Neon transaction-pooler can't run all DDL → use DATABASE_URL_UNPOOLED for Alembic;
+# Neon transaction-pooler can't run all DDL → prefer non-pooling URL for Alembic;
 # runtime app still uses the pooled DATABASE_URL.
-_db_url = os.getenv("DATABASE_URL_UNPOOLED") or os.getenv("DATABASE_URL")
+# Priority: DATABASE_URL_UNPOOLED → POSTGRES_URL_NON_POOLING (Vercel-Neon)
+#         → DATABASE_URL → POSTGRES_URL (Vercel-Neon pooled, last resort)
+_db_url = (
+    os.getenv("DATABASE_URL_UNPOOLED")
+    or os.getenv("POSTGRES_URL_NON_POOLING")
+    or os.getenv("DATABASE_URL")
+    or os.getenv("POSTGRES_URL")
+)
+# Normalize scheme: SQLAlchemy requires 'postgresql://', not 'postgres://'
+if _db_url and _db_url.startswith("postgres://"):
+    _db_url = "postgresql://" + _db_url[len("postgres://"):]
 if _db_url:
     config.set_main_option("sqlalchemy.url", _db_url)
 

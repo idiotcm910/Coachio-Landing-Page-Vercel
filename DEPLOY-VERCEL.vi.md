@@ -46,9 +46,10 @@ Tài liệu này hướng dẫn **đầy đủ từ đầu đến cuối** cách
 2. Đặt tên (vd `neon-coachio`), **Region: Singapore (sin1)** (gần VN), Free tier → **Create**.
 3. Khi hỏi **connect vào project** → chọn project Coachio của bạn (Production + Preview + Development).
 4. Vercel **tự thêm** vào Environment Variables của project:
-   - **`DATABASE_URL`** — chuỗi **pooled** (host có `-pooler`), app dùng lúc chạy.
-   - **`DATABASE_URL_UNPOOLED`** — chuỗi **non-pooling**, dùng để chạy migration.
-   > Không phải copy tay. Vào **Settings → Environment Variables** thấy 2 biến này là OK.
+   - **`POSTGRES_URL`** — chuỗi **pooled** (host có `-pooler`), app dùng lúc chạy.
+   - **`POSTGRES_URL_NON_POOLING`** — chuỗi **non-pooling**, dùng để chạy migration.
+   > Tích hợp Neon của Vercel tạo `POSTGRES_URL` + `POSTGRES_URL_NON_POOLING` — app tự đọc, **KHÔNG cần thêm `DATABASE_URL` thủ công** trên Vercel. Migration tự ưu tiên `POSTGRES_URL_NON_POOLING`.
+   > Không phải copy tay. Vào **Settings → Environment Variables** thấy các biến `POSTGRES_URL*` là OK.
 
 ---
 
@@ -65,8 +66,8 @@ Vào **project → Settings → Environment Variables**, thêm các biến sau (
 
 | Biến | Bắt buộc | Giá trị |
 |---|---|---|
-| `DATABASE_URL` | ✅ (tự có từ bước 3) | Neon pooled |
-| `DATABASE_URL_UNPOOLED` | ✅ (tự có từ bước 3) | Neon non-pooling |
+| `POSTGRES_URL` | ✅ (tự có từ bước 3 — do Neon integration tạo) | Neon pooled — app tự đọc, không cần set thêm |
+| `POSTGRES_URL_NON_POOLING` | ✅ (tự có từ bước 3 — do Neon integration tạo) | Neon non-pooling — dùng cho migration, tự đọc |
 | `BLOB_READ_WRITE_TOKEN` | ✅ (tự có từ bước 4) | Vercel Blob |
 | `SECRET_KEY` | ✅ | chuỗi ngẫu nhiên — tạo bằng `openssl rand -hex 32` |
 | `CRON_SECRET` | ✅ | chuỗi tự đặt (bảo vệ endpoint cron) |
@@ -94,11 +95,11 @@ git clone git@github.com:idiotcm910/Coachio-Landing-Page-Vercel.git
 cd Coachio-Landing-Page-Vercel
 vercel link                       # chọn đúng project Coachio
 
-# 2) Kéo biến môi trường (gồm DATABASE_URL_UNPOOLED) về máy
+# 2) Kéo biến môi trường (gồm POSTGRES_URL_NON_POOLING) về máy
 #    LƯU Ý: phải có --environment=production, vì env pull mặc định lấy "development"
 #    (chỉ có VERCEL_OIDC_TOKEN), còn biến Neon/Blob nằm ở production.
 vercel env pull .env.local --environment=production
-grep -E 'DATABASE_URL' .env.local   # phải thấy DATABASE_URL + DATABASE_URL_UNPOOLED
+grep -E 'POSTGRES_URL' .env.local   # phải thấy POSTGRES_URL + POSTGRES_URL_NON_POOLING
 
 # 3) Cài deps backend + chạy migration
 cd apps/api
@@ -106,10 +107,11 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 
 # nạp URL non-pooling rồi chạy migration
-export $(grep -E '^DATABASE_URL_UNPOOLED=' ../../.env.local | xargs)
+# Alembic tự ưu tiên POSTGRES_URL_NON_POOLING (Vercel-Neon) → DATABASE_URL_UNPOOLED → POSTGRES_URL
+export $(grep -E '^POSTGRES_URL_NON_POOLING=' ../../.env.local | xargs)
 .venv/bin/alembic upgrade head
 ```
-> Alembic tự ưu tiên `DATABASE_URL_UNPOOLED`; nếu không có thì fallback `DATABASE_URL`. Chạy xong sẽ tạo toàn bộ bảng funnel trên Neon.
+> Alembic tự ưu tiên `POSTGRES_URL_NON_POOLING` (Vercel-Neon) rồi fallback `DATABASE_URL_UNPOOLED` → `POSTGRES_URL` → `DATABASE_URL`. Chạy xong sẽ tạo toàn bộ bảng funnel trên Neon.
 
 ---
 
