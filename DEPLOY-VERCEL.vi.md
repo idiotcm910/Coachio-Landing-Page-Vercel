@@ -95,7 +95,10 @@ cd Coachio-Landing-Page-Vercel
 vercel link                       # chọn đúng project Coachio
 
 # 2) Kéo biến môi trường (gồm DATABASE_URL_UNPOOLED) về máy
-vercel env pull .env.local
+#    LƯU Ý: phải có --environment=production, vì env pull mặc định lấy "development"
+#    (chỉ có VERCEL_OIDC_TOKEN), còn biến Neon/Blob nằm ở production.
+vercel env pull .env.local --environment=production
+grep -E 'DATABASE_URL' .env.local   # phải thấy DATABASE_URL + DATABASE_URL_UNPOOLED
 
 # 3) Cài deps backend + chạy migration
 cd apps/api
@@ -152,6 +155,7 @@ Mở domain Vercel và làm theo:
 ## 12. Xử lý lỗi thường gặp
 - **Deploy đỏ lần đầu** → thiếu env/DB. Làm đủ bước 3–5 rồi Redeploy.
 - **Build lỗi `-r ../apps/api/requirements.txt`** (Vercel Python không thấy file) → mở `api/requirements.txt`, thay dòng `-r ...` bằng **dán thẳng nội dung** `apps/api/requirements.txt` vào, commit lại.
+- **`vercel env pull` chỉ ra `VERCEL_OIDC_TOKEN`** (thiếu DATABASE_URL...) → bạn đang kéo môi trường `development`. Chạy lại với **`--environment=production`**. Nếu vẫn thiếu → vào **Storage → database Neon → Connect Project** và tick cả 3 môi trường. Cách chắc nhất: copy thẳng `DATABASE_URL_UNPOOLED` từ dashboard rồi `export DATABASE_URL_UNPOOLED='...'` trước khi chạy `alembic upgrade head`.
 - **Migration lỗi do pooler** (prepared statement / DDL) → đảm bảo đang dùng **`DATABASE_URL_UNPOOLED`** (bước 7), không dùng URL pooled để chạy alembic.
 - **Ảnh không hiện trên landing** → Blob store phải là **Public** (bước 4). Nếu lỡ tạo Private, tạo store mới Public và cập nhật `BLOB_READ_WRITE_TOKEN`.
 - **Upload ảnh lỗi** → kiểm tra `BLOB_READ_WRITE_TOKEN` đã có; nếu Vercel đổi `x-api-version` của Blob API, báo lại để cập nhật `app/services/blob_storage_service.py`.
