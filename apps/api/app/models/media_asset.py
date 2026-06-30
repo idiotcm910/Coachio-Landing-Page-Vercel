@@ -1,7 +1,7 @@
-"""Media Library asset model — global catalog of files stored on S3.
+"""Media Library asset model — global catalog of files stored on Vercel Blob.
 
-Each row is one uploaded file (via `S3StorageService`) so the admin can browse,
-search, preview, copy-URL and reuse media across funnels, courses, emails, SEO…
+Each row is one uploaded file so the admin can browse, search, preview,
+copy-URL and reuse media across funnels, courses, emails, SEO…
 The library is NOT bound to any funnel/course (no FK) — it is a shared catalog.
 """
 import uuid
@@ -22,7 +22,7 @@ class MediaAsset(Base):
     id = Column(String(36), primary_key=True, index=True, default=uuid_str)
     # Full S3 object key (e.g. media-library/<uuid>.png) — unique per stored file.
     object_key = Column(String(1024), unique=True, nullable=False, index=True)
-    # Public URL (CDN-first via _get_s3_url) used directly in HTML/email/SEO.
+    # Public URL (Vercel Blob public URL) used directly in HTML/email/SEO.
     url = Column(String(2048), nullable=False)
     content_type = Column(String(255), nullable=True)
     # Coarse kind derived from content_type at upload: "image" | "other".

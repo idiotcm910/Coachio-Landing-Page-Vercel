@@ -51,16 +51,16 @@ class FakeUpload:
 
 @pytest.fixture(autouse=True)
 def patch_storage(monkeypatch):
-    async def fake_upload(file_content, object_key):
-        return f"https://cdn.example.com/{object_key}"
+    async def fake_upload(file_content, object_key, content_type=None):
+        return f"https://store.public.blob.vercel-storage.com/{object_key}"
 
     deleted = []
 
-    async def fake_delete(object_key):
-        deleted.append(object_key)
+    async def fake_delete(blob_url):
+        deleted.append(blob_url)
 
-    monkeypatch.setattr(mod.storage_service, "upload_file_from_bytes", fake_upload)
-    monkeypatch.setattr(mod.storage_service, "delete_object", fake_delete)
+    monkeypatch.setattr(mod.blob_storage_service, "upload_file_from_bytes", fake_upload)
+    monkeypatch.setattr(mod.blob_storage_service, "delete_by_url", fake_delete)
     return deleted
 
 
@@ -72,7 +72,7 @@ def test_upload_creates_catalog_row(db):
     assert asset.kind == "image"
     assert asset.original_filename == "hero.png"
     assert asset.object_key.startswith("media-library/")
-    assert asset.url.startswith("https://cdn.example.com/media-library/")
+    assert asset.url.startswith("https://store.public.blob.vercel-storage.com/media-library/")
     assert asset.file_size == len(b"imagebytes")
     assert db.query(MediaAsset).count() == 1
 
@@ -122,7 +122,7 @@ def test_delete_removes_object_and_row(db, patch_storage):
     asset = asyncio.run(media_library_service.create_from_upload(db, FakeUpload("a.png", "image/png"), "u"))
     asyncio.run(media_library_service.delete(db, asset.id))
     assert db.query(MediaAsset).count() == 0
-    assert asset.object_key in patch_storage  # S3 delete was called
+    assert asset.url in patch_storage  # Blob delete was called
 
 
 def test_delete_missing_raises_404(db):
@@ -134,10 +134,10 @@ def test_delete_missing_raises_404(db):
 def test_delete_s3_failure_keeps_row(db, monkeypatch):
     asset = asyncio.run(media_library_service.create_from_upload(db, FakeUpload("a.png", "image/png"), "u"))
 
-    async def boom(object_key):
-        raise Exception("S3 down")
+    async def boom(blob_url):
+        raise Exception("Blob storage down")
 
-    monkeypatch.setattr(mod.storage_service, "delete_object", boom)
+    monkeypatch.setattr(mod.blob_storage_service, "delete_by_url", boom)
     with pytest.raises(Exception):
         asyncio.run(media_library_service.delete(db, asset.id))
     assert db.query(MediaAsset).count() == 1  # row not orphaned-deleted

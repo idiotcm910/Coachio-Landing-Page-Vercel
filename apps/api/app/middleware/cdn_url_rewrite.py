@@ -1,17 +1,17 @@
 """CDN URL rewrite middleware.
 
-Rewrites legacy Bunny shared CDN host(s) (e.g. ``coachio-prod.b-cdn.net``) to a
+Rewrites legacy CDN host(s) (e.g. ``coachio-prod.b-cdn.net``) to a
 custom CNAME host (e.g. ``cdn.coachio.ai``) in outgoing JSON API responses.
 
 Why: some Vietnamese ISPs (FPT) DNS-sinkhole the shared ``*.b-cdn.net`` domain to
 ``127.0.0.1``, so users on those networks get ``ERR_CONNECTION_REFUSED`` for any
-asset served from it. A custom CNAME pointing to the same Bunny pull zone serves
+asset served from it. A custom CNAME pointing to the same pull zone serves
 the exact same files but is not sinkholed.
 
 Legacy URLs are stored as full URLs across many tables AND embedded inside JSONB
 content (funnel pages, agent skills, etc.). Rewriting at the response layer covers
 all of them in one place — no database migration, instantly reversible via config.
-New uploads should set ``BUNNY_CDN_URL`` directly to the canonical host so they
+New uploads should set the canonical CDN host directly so they
 never carry the legacy host in the first place.
 """
 

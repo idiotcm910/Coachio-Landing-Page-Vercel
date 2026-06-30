@@ -19,15 +19,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Coachio Landing Page API"
     DEBUG: bool = False
 
-    # S3 Configuration
-    S3_ENDPOINT: str = ""
-    S3_BUCKET_NAME: str = ""
-    S3_ACCESS_KEY: str = ""
-    S3_SECRET_KEY: str = ""
-    S3_REGION: str = ""
-    BUNNY_CDN_URL: str = ""
-
-    # CDN host rewrite — migrate legacy Bunny shared host(s) (e.g. coachio-prod.b-cdn.net,
+    # CDN host rewrite — migrate legacy CDN host(s) (e.g. coachio-prod.b-cdn.net,
     # which some VN ISPs DNS-sinkhole) to a custom CNAME host (e.g. cdn.coachio.ai).
     # Applied to outgoing JSON API responses, covering both plain URL columns and URLs
     # embedded inside JSONB content — without touching the database.
@@ -72,11 +64,8 @@ class Settings(BaseSettings):
     # Callback Configuration
     PREFIX_URL_CALLBACK: str = ""
 
-    # Bunny CDN
-    BUNNY_STORAGE_ZONE: str = ""
-    BUNNY_API_KEY: str = ""
-    BUNNY_PULL_ZONE_URL: str = ""
-    BUNNY_REGION: str = ""
+    # Vercel Blob
+    BLOB_READ_WRITE_TOKEN: str = ""  # Vercel Blob store token
 
     # Resend
     RESEND_API_KEY: str = ""

@@ -1,7 +1,7 @@
-"""Media Library service — catalogs S3 uploads into `media_assets`.
+"""Media Library service — catalogs Vercel Blob uploads into `media_assets`.
 
-Wraps the existing `S3StorageService` (storage layer) and adds the catalog
-concern: validate → upload to S3 → persist metadata; plus list/search/delete.
+Wraps the Vercel Blob storage layer and adds the catalog concern: validate →
+upload to Blob → persist metadata; plus list/search/delete.
 The library is global (no funnel/course coupling), reusable across surfaces.
 """
 import os
@@ -12,7 +12,7 @@ from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.models.media_asset import MediaAsset
-from app.services.storage_service import storage_service
+from app.services.blob_storage_service import blob_storage_service
 from app.utils.constants import ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES, MAX_FILE_SIZE
 
 _MEDIA_NAMESPACE = "media-library"
@@ -69,9 +69,10 @@ class MediaLibraryService:
             )
 
         object_key = self._build_object_key(file)
-        url = await storage_service.upload_file_from_bytes(
+        url = await blob_storage_service.upload_file_from_bytes(
             file_content=file_content,
             object_key=object_key,
+            content_type=file.content_type,
         )
 
         asset = MediaAsset(
@@ -116,9 +117,9 @@ class MediaLibraryService:
         return items, total
 
     async def delete(self, db: Session, asset_id: str) -> None:
-        """Remove the S3 object first, then the catalog record.
+        """Remove the Blob object first, then the catalog record.
 
-        S3 removal failure raises → the record is kept and no success is
+        Blob removal failure raises → the record is kept and no success is
         reported (avoids orphaning the file silently).
         """
         asset = db.query(MediaAsset).filter(MediaAsset.id == asset_id).first()
@@ -128,7 +129,7 @@ class MediaLibraryService:
                 detail="Media asset not found",
             )
 
-        await storage_service.delete_object(asset.object_key)
+        await blob_storage_service.delete_by_url(asset.url)
 
         db.delete(asset)
         db.commit()
