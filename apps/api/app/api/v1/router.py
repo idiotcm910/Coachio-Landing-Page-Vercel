@@ -27,6 +27,7 @@ from app.api.v1.endpoints.public import (
     url_redirects as public_url_redirects,
 )
 from app.api.v1.endpoints import webhooks as sepay_webhook
+from app.api.v1.endpoints.cron import dispatch_broadcasts as cron_dispatch_broadcasts
 
 api_router = APIRouter()
 
@@ -56,3 +57,6 @@ api_router.include_router(public_funnel_lead_capture.router, prefix="/public/fun
 api_router.include_router(public_lucky_events.router, prefix="/public/lucky-events", tags=["Public Lucky Draw"])
 api_router.include_router(public_url_redirects.router, prefix="/public/url-redirects", tags=["Public URL Redirects"])
 api_router.include_router(sepay_webhook.router, prefix="/hooks", tags=["Webhooks"])
+
+# --- Cron (Vercel Cron; CRON_SECRET) ---
+api_router.include_router(cron_dispatch_broadcasts.router, prefix="/cron", tags=["Cron"])

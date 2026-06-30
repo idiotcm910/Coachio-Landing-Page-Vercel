@@ -92,6 +92,9 @@ class Settings(BaseSettings):
     BROADCAST_STUCK_TIMEOUT_S: int = 300      # reaper: requeue 'sending' jobs older than this
     BROADCAST_JOB_INTERVAL_SECONDS: int = 5   # worker loop sleep between ticks
 
+    # Cron — protects Vercel Cron endpoints (Vercel sends Authorization: Bearer <CRON_SECRET>)
+    CRON_SECRET: str = ""
+
     # Frontend URL
     FRONTEND_URL: str = ""
 

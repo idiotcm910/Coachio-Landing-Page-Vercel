@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import os
 import sys
@@ -11,7 +10,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.v1.router import api_router
 from app.middleware.cdn_url_rewrite import CDNUrlRewriteMiddleware
-from app.jobs.broadcast_dispatch_job import start_broadcast_job
 
 
 class RailsStyleFormatter(logging.Formatter):
@@ -49,22 +47,13 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def _app_resources():
-    """Initialize cache backend, then start background jobs."""
-    # Eager init so the selected backend is logged once at boot time.
+    """Serverless: no background jobs. Eager-init the in-memory cache so the
+    backend is logged once at boot. Broadcast dispatch runs via Vercel Cron;
+    order expiry is lazy on read."""
     from app.core.cache import get_backend
     _active_backend = get_backend()
     logger.info("Cache backend: in-memory (%s)", type(_active_backend).__name__)
-
-    broadcast_task = asyncio.create_task(start_broadcast_job())
-    try:
-        yield
-    finally:
-        for task in (broadcast_task,):
-            task.cancel()
-            try:
-                await task
-            except asyncio.CancelledError:
-                pass
+    yield
 
 
 @asynccontextmanager
