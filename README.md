@@ -98,6 +98,8 @@ receipt email → lucky-draw → broadcast → discount).
 
 ## Deploy with Vercel
 
+📘 **Hướng dẫn deploy đầy đủ (tiếng Việt, từng bước): [DEPLOY-VERCEL.vi.md](./DEPLOY-VERCEL.vi.md)**
+
 One-click style deploy (FE + FastAPI serverless + Neon Postgres + Vercel Blob).
 Hướng dẫn từng bước (tiếng Việt): [`docs/deploy-vercel.vi.md`](./docs/deploy-vercel.vi.md).
 
