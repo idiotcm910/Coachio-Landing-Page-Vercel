@@ -2,7 +2,9 @@
 
 > 🇬🇧 English documentation: [README.md](./README.md)
 
-Nền tảng funnel & landing page mã nguồn mở: xây dựng landing page, thu thập lead, bán sản phẩm số với thanh toán SePay/VietQR, gửi email giao dịch và broadcast, chạy chương trình giảm giá, sự kiện vòng quay may mắn, tặng quà ngoài tự động và đọc analytics funnel — tất cả trong một ứng dụng admin. FastAPI + Next.js, giấy phép MIT.
+Nền tảng funnel & landing page mã nguồn mở: xây dựng landing page, thu thập lead, bán sản phẩm số với thanh toán SePay/VietQR, gửi email giao dịch và broadcast, chạy chương trình giảm giá, sự kiện vòng quay may mắn và đọc analytics funnel — tất cả trong một ứng dụng admin. FastAPI + Next.js, giấy phép MIT.
+
+> **Deploy lên Vercel (miễn phí):** xem hướng dẫn từng bước tại [`docs/deploy-vercel.vi.md`](./docs/deploy-vercel.vi.md).
 
 ---
 
@@ -75,14 +77,6 @@ Nền tảng funnel & landing page mã nguồn mở: xây dựng landing page, t
 - Spin (quay) chọn người thắng ngẫu nhiên
 - Xem danh sách người thắng, huỷ kết quả
 
-### Tặng quà ngoài (External Gifts)
-- Quà có thể là: file tải về, mã coupon, URL tùy chỉnh
-- Giao quà tự động sau khi đơn SUCCESS qua email (Resend)
-- Gift Automations: quy tắc tặng quà theo funnel/sản phẩm
-- Gift Campaigns: chiến dịch tặng quà riêng
-- Ledger chống trùng: mỗi đơn thành công chỉ nhận quà một lần
-- Background worker xử lý hàng đợi giao quà
-
 ### Analytics
 - Revenue analytics theo funnel và theo sản phẩm
 - Funnel analytics: lượt xem, lead, tỷ lệ chuyển đổi
@@ -113,9 +107,9 @@ Nền tảng funnel & landing page mã nguồn mở: xây dựng landing page, t
 - **Database**: PostgreSQL 16
 - **Cache / Rate-limit**: In-process (InMemoryBackend, no Redis)
 - **Email**: [Resend](https://resend.com/) SDK
-- **Storage**: boto3 (S3-compatible) + Bunny CDN (tuỳ chọn)
+- **Storage**: Vercel Blob (khi deploy Vercel); boto3 S3-compatible hoặc Bunny CDN (khi self-host)
 - **Tracking**: Meta Conversions API
-- **Background jobs**: asyncio tasks (expire orders, broadcast dispatch, gift dispatch)
+- **Background jobs**: Vercel Cron 1x/ngày (broadcast dispatch); lazy expiry cho đơn hàng
 
 ### Frontend — `apps/web`
 - **Framework**: Next.js 14 (App Router)
@@ -172,10 +166,6 @@ coachio-landing-page/
 │           │   ├── broadcasts/          # Quản lý broadcast email
 │           │   ├── discounts/           # Mã giảm giá
 │           │   ├── funnels/[funnelId]/  # Chỉnh sửa funnel
-│           │   ├── gift-automations/    # Quy tắc tặng quà
-│           │   ├── gift-campaigns/      # Chiến dịch quà
-│           │   ├── gift-tracking/       # Theo dõi giao quà
-│           │   ├── gifts/               # Quản lý quà ngoài
 │           │   ├── leads/               # Danh sách lead
 │           │   ├── login/               # Đăng nhập admin
 │           │   ├── lucky-draw/[eventId] # Sự kiện vòng quay
@@ -195,7 +185,7 @@ coachio-landing-page/
 │   └── design-system/                   # @coachio/design-system
 ├── docs/
 │   └── smoke-test.md                    # E2E smoke test runbook (13 bước)
-├── docker-compose.yml                   # 4 services: db, redis, api, web
+├── docker-compose.yml                   # 3 services: db, api, web (local dev)
 ├── .env.example                         # Template biến môi trường
 ├── nx.json                              # Nx configuration
 ├── package.json                         # Root scripts + devDependencies
@@ -214,7 +204,7 @@ coachio-landing-page/
 | PostgreSQL | 16 | Database chính |
 | Docker + Compose v2 | Engine ≥ 24 | Tuỳ chọn — cho chạy toàn bộ bằng container |
 
-> Không dùng Docker: cài đặt Node, pnpm, Python 3.12 và PostgreSQL trực tiếp trên máy. Không cần Redis.
+> Không dùng Docker: cài đặt Node, pnpm, Python 3.12 và PostgreSQL trực tiếp trên máy.
 
 ---
 
@@ -406,27 +396,11 @@ Toàn bộ config nằm trong `.env` (copy từ `.env.example`). Bảng dưới 
 | `RESEND_API_KEY` | API key của Resend |
 | `RESEND_FROM_EMAIL` | Địa chỉ email gửi đã verify trên Resend |
 
-### Nhóm: S3-compatible Storage
+### Nhóm: Vercel Blob (media storage — Vercel Edition)
 
 | Biến | Mô tả |
 |------|-------|
-| `S3_ENDPOINT` | Endpoint S3 (ví dụ: `https://s3.ap-southeast-1.amazonaws.com`) |
-| `S3_BUCKET_NAME` | Tên bucket |
-| `S3_ACCESS_KEY` | Access key ID |
-| `S3_SECRET_KEY` | Secret access key |
-| `S3_REGION` | Region (ví dụ: `ap-southeast-1`) |
-
-### Nhóm: Bunny CDN (tuỳ chọn)
-
-| Biến | Mô tả |
-|------|-------|
-| `BUNNY_CDN_URL` | URL CDN công khai cho media |
-| `BUNNY_STORAGE_ZONE` | Tên storage zone trên Bunny |
-| `BUNNY_API_KEY` | API key Bunny |
-| `BUNNY_PULL_ZONE_URL` | URL pull zone |
-| `BUNNY_REGION` | Region code (để trống = mặc định) |
-| `CDN_LEGACY_HOSTS` | Danh sách host Bunny cũ cần rewrite (dấu phẩy) |
-| `CDN_CANONICAL_HOST` | Host CDN chuẩn cần rewrite sang; trống = tắt tính năng |
+| `BLOB_READ_WRITE_TOKEN` | Token từ Vercel Blob store — lấy trong Storage tab của Vercel dashboard |
 
 ### Nhóm: Meta Conversions API (tuỳ chọn)
 
@@ -445,12 +419,10 @@ Toàn bộ config nằm trong `.env` (copy từ `.env.example`). Bảng dưới 
 |------|----------|-------|
 | `LANDING_CACHE_ENABLED` | `True` | Bật/tắt in-process cache cho landing |
 | `LANDING_CACHE_TTL` | `3600` | TTL cache landing (giây) |
-| `FUNNEL_ORDER_EXPIRY_JOB_INTERVAL_SECONDS` | `300` | Chu kỳ job hết hạn đơn |
 | `BROADCAST_BATCH_SIZE` | `100` | Số email gửi mỗi batch |
 | `BROADCAST_RATE_DELAY_MS` | `200` | Delay giữa các email (ms) |
 | `BROADCAST_MAX_ATTEMPTS` | `3` | Số lần retry tối đa |
-| `GIFT_BATCH_SIZE` | `50` | Số quà giao mỗi batch |
-| `GIFT_MAX_ATTEMPTS` | `3` | Số lần retry tối đa cho gift dispatch |
+| `CRON_SECRET` | — | Bảo vệ endpoint cron Vercel |
 
 ### Nhóm: Frontend (Next.js)
 
@@ -501,9 +473,6 @@ SePay gửi webhook
     → Đơn chuyển sang status=SUCCESS
     ↓
 Hệ thống gửi email receipt (Resend)
-    ↓ (nếu có gift automation)
-Background gift worker giao quà ngoài qua email
-    (file / coupon code / URL)
     ↓ (nếu có Meta CAPI)
 Gửi sự kiện Purchase lên Meta Conversions API
 ```
@@ -531,10 +500,6 @@ Tất cả routes có prefix `/api/v1` (cấu hình qua biến `API_V1_PREFIX`).
 | `GET/POST/DELETE` | `/admin/media` | Media library |
 | `GET/POST` | `/admin/broadcasts` | Broadcast email campaigns |
 | `POST` | `/admin/broadcasts/{id}/send` | Gửi broadcast |
-| `GET/POST` | `/admin/gifts` | Quản lý quà ngoài |
-| `GET/POST` | `/admin/gift-automations` | Quy tắc tặng quà tự động |
-| `GET/POST` | `/admin/gift-campaigns` | Chiến dịch tặng quà |
-| `GET` | `/admin/gift-grants` | Theo dõi giao quà |
 | `GET/POST` | `/admin/lucky-events` | Sự kiện vòng quay |
 | `POST` | `/admin/lucky-events/{id}/spin` | Quay chọn người thắng |
 | `GET/POST` | `/admin/url-redirects` | Quản lý URL redirect |
@@ -617,8 +582,8 @@ Bao gồm 2 path:
 - **Docker Compose** — dùng cho CI/release verification (recommend)
 - **Host/dev** — chạy với Postgres + Redis local, không cần Docker
 
-**13 bước kiểm tra:**
-0. Seed admin → 1. Admin login → 2. Tạo product → 3. Tạo funnel → 4. Publish → 5. Xem landing public → 6. Thu lead → 7. Tạo + áp mã giảm giá → 8. Checkout → QR SePay → 9. SePay webhook → đơn SUCCESS → 10. Email receipt → 11. Giao quà ngoài → 12. Lucky draw (event/prize/spin/winner) → 13. Broadcast (soạn/gửi/verify jobs)
+**Các bước kiểm tra:**
+0. Seed admin → 1. Admin login → 2. Tạo product → 3. Tạo funnel → 4. Publish → 5. Xem landing public → 6. Thu lead → 7. Tạo + áp mã giảm giá → 8. Checkout → QR SePay → 9. SePay webhook → đơn SUCCESS → 10. Email receipt → 11. Lucky draw (event/prize/spin/winner) → 12. Broadcast (soạn/gửi/verify jobs)
 
 > Với key placeholder (RESEND dummy, SePay test), Resend trả 401 (được ghi log) là **pass criterion** — luồng order vẫn hoạt động hoàn toàn mà không cần internet.
 
@@ -626,7 +591,13 @@ Bao gồm 2 path:
 
 ## 13. Triển khai & lưu ý
 
-### Docker build
+### Deploy lên Vercel (khuyến nghị — miễn phí)
+
+Xem hướng dẫn đầy đủ từng bước tại **[docs/deploy-vercel.vi.md](./docs/deploy-vercel.vi.md)**.
+
+Tóm tắt: fork repo → tạo Supabase project → import vào Vercel → set env vars → Deploy → chạy `alembic upgrade head` → seed admin.
+
+### Docker build (tự host)
 
 ```bash
 docker compose build
