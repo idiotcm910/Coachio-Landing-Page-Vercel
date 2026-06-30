@@ -1,8 +1,8 @@
-"""Railway boot smoke tests.
+"""Boot smoke tests (Vercel edition).
 
 Verifies:
 1. App imports and TestClient starts with NO exception when all optional keys
-   are blank (no Redis URL needed — Railway edition always uses in-memory cache).
+   are blank (no Redis URL needed — always uses in-memory cache).
 2. GET /api/v1/health returns 200 with body {"status": "ok", ...}.
 3. The active cache backend is always InMemoryBackend.
 
@@ -51,8 +51,7 @@ def clean_boot(monkeypatch):
     for attr in (
         "SEPAY_BANK_NAME", "SEPAY_ACCOUNT_NUMBER", "PREFIX_URL_CALLBACK",
         "RESEND_API_KEY", "RESEND_FROM_EMAIL",
-        "S3_ENDPOINT", "S3_BUCKET_NAME", "S3_ACCESS_KEY", "S3_SECRET_KEY",
-        "BUNNY_CDN_URL", "BUNNY_STORAGE_ZONE", "BUNNY_API_KEY", "BUNNY_PULL_ZONE_URL",
+        "BLOB_READ_WRITE_TOKEN",
         "META_DEFAULT_PIXEL_ID", "META_DEFAULT_CAPI_TOKEN",
     ):
         if hasattr(config_module.settings, attr):
@@ -66,9 +65,9 @@ def clean_boot(monkeypatch):
 # Tests
 # ---------------------------------------------------------------------------
 
-class TestRailwayBoot:
+class TestBoot:
     def test_app_boots_and_health_returns_200(self, clean_boot):
-        """App must start and /api/v1/health must return 200 with no Redis."""
+        """App must start and /api/v1/health must return 200 with no optional keys set."""
         from main import app
 
         app.dependency_overrides[get_db] = _override_get_db
