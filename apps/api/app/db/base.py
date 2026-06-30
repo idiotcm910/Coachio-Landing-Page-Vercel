@@ -1,9 +1,13 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import NullPool
 from app.core.config import settings
 
-engine = create_engine(settings.DATABASE_URL, pool_pre_ping=True)
+# Serverless (Vercel): each invocation is a fresh process — never hold a pool.
+# NullPool opens/closes a connection per checkout; Supabase's pgbouncer pooler
+# (port 6543) handles the actual connection multiplexing.
+engine = create_engine(settings.DATABASE_URL, poolclass=NullPool, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
