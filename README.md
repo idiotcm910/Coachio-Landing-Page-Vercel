@@ -1,14 +1,14 @@
 # Coachio Landing Page
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template/CHANGE_ME)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/sonlovinbot/coachio-landing-page-vercel)
 
 > 🇻🇳 Tài liệu tiếng Việt: [README.vi.md](./README.vi.md)
-> This repo is a Railway-optimised downstream of [coachio-landing-page](https://github.com/sonlovinbot/coachio-landing-page).
+> This repo is a Vercel-optimised edition of [coachio-landing-page](https://github.com/sonlovinbot/coachio-landing-page).
 
 Open-source funnel & landing-page platform: build landing pages, capture leads,
 sell digital products with SePay/VietQR checkout, send transactional + broadcast
-emails, run discounts, lucky-draw events, deliver external gifts, and read
-funnel analytics — all from one admin app. FastAPI + Next.js, MIT licensed.
+emails, run discounts, lucky-draw events, and read funnel analytics — all from
+one admin app. FastAPI + Next.js, MIT licensed.
 
 ## Features
 
@@ -19,14 +19,13 @@ funnel analytics — all from one admin app. FastAPI + Next.js, MIT licensed.
 - **Email** — transactional receipt / waiting-payment + broadcast campaigns (Resend).
 - **Discounts** — codes with scope + default activation, stacking at checkout.
 - **Lucky draw** — events, prizes, public spin, winners.
-- **External gifts** — deliver downloadable file / coupon code / custom URL by email.
 - **Analytics** — funnel + revenue analytics, optional Meta CAPI tracking.
 
 ## Tech Stack
 
-- **API:** Python 3.12, FastAPI, SQLAlchemy, Alembic, Resend, boto3. In-process cache (no Redis).
+- **API:** Python 3.12, FastAPI, SQLAlchemy, Alembic, Resend. Vercel Blob storage, in-process cache (no Redis).
 - **Web:** Next.js 14, Tailwind v3, `@coachio/api-client`, `@coachio/design-system`.
-- **Infra:** Postgres 16, Docker Compose. Monorepo: nx + pnpm.
+- **Infra:** Vercel (serverless) / Supabase / Vercel Blob. Postgres 16, Docker Compose (local). Monorepo: nx + pnpm.
 
 ## Prerequisites
 
@@ -95,13 +94,14 @@ Other nx targets: `nx run api:test`, `nx run api:lint`, `nx run api:typecheck`,
 
 End-to-end verification runbook lives in
 `docs/smoke-test.md` (admin → funnel → publish → lead → checkout → SePay webhook →
-receipt email → gift → lucky-draw → broadcast → discount).
+receipt email → lucky-draw → broadcast → discount).
 
-## Deploy lên Railway
+## Deploy with Vercel
 
-One-click deploy: api (FastAPI) + web (Next.js) + Postgres — see [`docs/railway-template.md`](./docs/railway-template.md) for the full env-var wiring table, pre-deploy migration notes, and the marketplace publish checklist.
+One-click style deploy (FE + FastAPI serverless + Supabase + Vercel Blob).
+Hướng dẫn từng bước (tiếng Việt): [`docs/deploy-vercel.vi.md`](./docs/deploy-vercel.vi.md).
 
-> The badge link above uses `CHANGE_ME` — update it with your template ID after publishing on the Railway dashboard.
+> The badge link above points to `https://github.com/sonlovinbot/coachio-landing-page-vercel` — update `repository-url` after forking/publishing your own repo.
 
 ## License
 
