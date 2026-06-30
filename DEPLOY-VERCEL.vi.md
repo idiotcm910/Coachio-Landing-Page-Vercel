@@ -106,19 +106,22 @@ cd apps/api
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 
-# nạp URL non-pooling rồi chạy migration
-# Alembic tự ưu tiên POSTGRES_URL_NON_POOLING (Vercel-Neon) → DATABASE_URL_UNPOOLED → POSTGRES_URL
-export $(grep -E '^POSTGRES_URL_NON_POOLING=' ../../.env.local | xargs)
+# Lấy chuỗi NON-POOLING từ Neon console (console.neon.tech → project → Connection Details
+# → TẮT nút "Pooled connection" → copy), rồi đặt CẢ HAI biến cho lần chạy local:
+#   - DATABASE_URL: vì lúc import, app khởi tạo engine từ DATABASE_URL.
+#   - SECRET_KEY: config bắt buộc có (chỉ cần giá trị tạm để chạy migration).
+export DATABASE_URL='postgresql://...dán-chuỗi-non-pooling-neon...?sslmode=require'
+export SECRET_KEY='tam-chay-migration'
 .venv/bin/alembic upgrade head
 ```
-> Alembic tự ưu tiên `POSTGRES_URL_NON_POOLING` (Vercel-Neon) rồi fallback `DATABASE_URL_UNPOOLED` → `POSTGRES_URL` → `DATABASE_URL`. Chạy xong sẽ tạo toàn bộ bảng funnel trên Neon.
+> Lưu ý: nhớ `git pull` để có bản mới nhất (app tự đọc `POSTGRES_URL*`). Khi deploy trên Vercel thì không phải làm thủ công vầy — Vercel đã có sẵn `POSTGRES_URL*` + `SECRET_KEY`.
 
 ---
 
 ## 8. Tạo tài khoản admin — 1 lần
 Vẫn ở thư mục `apps/api` (env đã pull ở bước 7):
 ```bash
-export $(grep -E '^DATABASE_URL=' ../../.env.local | xargs)
+# dùng lại 2 biến đã export ở bước 7 (DATABASE_URL + SECRET_KEY)
 .venv/bin/python -m app.scripts.create_admin --email ban@email.com --password 'matkhau-manh-cua-ban'
 ```
 Tài khoản này dùng để đăng nhập `/admin`.
